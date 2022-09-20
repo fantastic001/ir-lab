@@ -1,7 +1,13 @@
 
 
+from functools import reduce
 from document_index import simple_tokenizer
 
+def chain(*func):
+    def compose(f, g):
+        return lambda x : g(f(x))
+              
+    return reduce(compose, func, lambda x : x)
 
 def replace_ending(x, y):
     return lambda s: s[:-len(x)] + y if s.endswith(x) else s 
@@ -10,6 +16,8 @@ def replace_ending(x, y):
 def remove_ending(x):
     return replace_ending(x, "")
 
+def remove_duplicate_at_end():
+    return lambda s: remove_ending(s[-1] * 2)(s)
 class StandardStemmer:
     def __init__(self, rules, dataset) -> None:
         self.rules = rules 
@@ -38,6 +46,7 @@ def english_rules():
         replace_ending("ied", "y"),
         remove_ending("ed"),
         remove_ending("s"),
+        chain(remove_ending("ing"), remove_duplicate_at_end())
     ]
 
 
