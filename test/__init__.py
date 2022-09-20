@@ -3,7 +3,7 @@ from operator import index
 import unittest
 from document_index import * 
 from string_distance import * 
-
+from document_index.stemming import * 
 
 class TestDocumentIndex(unittest.TestCase):
     def test_simple_tokenizer(self):
@@ -32,6 +32,19 @@ class TestDocumentIndex(unittest.TestCase):
         index.add(Document("2", {"b", "c", "d"}))
         self.assertEqual(list(index.query_all({"b", "c"})), ["1", "2"])
         self.assertEqual(list(index.query_all({"a", "b", "c"})), ["1"])
+        self.assertEqual(list(index.query_all({"a", "b", "cjlkjkljkl"})), [])
+            
+    def test_stemming(self):
+        dictionary = "play join fly we like to with"
+        stemmer = StandardStemmer.from_string(dictionary, english_rules())
+        self.assertEqual(stemmed_tokenizer(simple_tokenizer, stemmer)("We like to play with flies"), ["we", "like", "to", "play", "with", "fly"])
+    
+    def test_standard_tokenizer(self):
+        self.assertEqual(["a", "b", "c"], standard_tokenizer("  a  b   c"))
+        self.assertEqual(["usa", "b", "c"], standard_tokenizer("  U.S.A  b   c"))
+        self.assertEqual(["stefans", "b", "c"], standard_tokenizer("  Stefan's  b   c"))
+
+        
 
 class TestStringDistance(unittest.TestCase):
 
@@ -50,6 +63,3 @@ class TestStringDistance(unittest.TestCase):
 
     def test_tf_idf_distance(self):
         pass 
-
-
-

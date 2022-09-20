@@ -18,9 +18,28 @@ class Document:
 def remove_non_alphanumeric(s: str) -> str:
     return "".join(c for c in s if c.isalnum())
 
-def simple_tokenizer(content: str) -> Set[str]:
+def simple_tokenizer(content: str) -> List[str]:
     return [remove_non_alphanumeric(s) for s in content.split(" ") if remove_non_alphanumeric(s) != ""]
 
+
+def standard_tokenizer(content: str) -> List[str]:
+    result = [] 
+    prev = ""
+    A = string.ascii_letters + string.digits
+    is_alnum = lambda x: x in A 
+    current = ""
+    for c in content:
+        if is_alnum(c):
+            current = current + c 
+        else:
+            if c not in "'." or not is_alnum(prev):
+                if current != "":
+                    result.append(current.lower())
+                    current = ""
+        prev = c
+    if current != "":
+        result.append(current)
+    return result 
 
 class PostingsList:
 
@@ -121,7 +140,7 @@ class Index:
             else:
                 self.data[term].add(doc.id)
     def query_all(self, terms: Set[str]):
-        plists = sorted([self.data[term] for term in terms], key = lambda x: len(x))
+        plists = sorted([self.data.get(term, PostingsList()) for term in terms], key = lambda x: len(x))
         result = plists[0]
         for p in plists[1:]:
             result = result ^ p
