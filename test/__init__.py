@@ -1,4 +1,5 @@
 
+from operator import index
 import unittest
 from document_index import * 
 
@@ -24,7 +25,12 @@ class TestDocumentIndex(unittest.TestCase):
         self.assertEqual(list(docs ^ PostingsList.from_list(["d"])), ["d"])
         self.assertEqual(list(docs ^ PostingsList.from_list(["b", "c"])), ["b", "c"])
     
-    def test_b_index(self):
-        idnex = BIndex()
+    def test_index(self):
+        index = Index()
+        index.add(Document("1", {"a", "b", "c"}))
+        index.add(Document("2", {"b", "c", "d"}))
+        self.assertEqual(list(index.query_all({"b", "c"})), ["1", "2"])
+        self.assertEqual(list(index.query_all({"a", "b", "c"})), ["1"])
+
 
 

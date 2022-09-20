@@ -1,3 +1,4 @@
+from typing import Callable, Set
 from typing import List
 import string
 
@@ -5,6 +6,13 @@ class Document:
     def __init__(self, id, terms):
         self.id = id 
         self.terms = terms
+    
+    @staticmethod
+    def from_file(path: str, tokenizer: Callable[[str], List[str]]) -> "Document":
+        result = None
+        with open(path) as f:
+            result =  Document(path, set(tokenizer(f.read())))
+        return result
     
 
 def remove_non_alphanumeric(s: str) -> str:
@@ -101,9 +109,20 @@ class PostingsList:
                 y = y.next 
         return result 
 
-class BNode:
-    def __init__(self) -> None:
-        self.children = [] 
 
-class BIndex:
-    pass 
+class Index:
+    def __init__(self) -> None:
+        self.data = {}
+    
+    def add(self, doc: Document):
+        for term in doc.terms:
+            if term not in self.data:
+                self.data[term] = PostingsList.from_list([doc.id])
+            else:
+                self.data[term].add(doc.id)
+    def query_all(self, terms: Set[str]):
+        plists = sorted([self.data[term] for term in terms], key = lambda x: len(x))
+        result = plists[0]
+        for p in plists[1:]:
+            result = result ^ p
+        return result 
