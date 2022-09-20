@@ -2,12 +2,13 @@
 from operator import index
 import unittest
 from document_index import * 
+from string_distance import * 
 
 
 class TestDocumentIndex(unittest.TestCase):
     def test_simple_tokenizer(self):
-        self.assertEqual({"a", "b", "c"}, simple_tokenizer("  a  b   c"))
-        self.assertEqual({"a", "b", "c"}, simple_tokenizer("  a.  b .  c"))
+        self.assertEqual(["a", "b", "c"], simple_tokenizer("  a  b   c"))
+        self.assertEqual(["a", "b", "c"], simple_tokenizer("  a.  b .  c"))
     
     def test_postings_list(self):
         docs = PostingsList()
@@ -31,6 +32,24 @@ class TestDocumentIndex(unittest.TestCase):
         index.add(Document("2", {"b", "c", "d"}))
         self.assertEqual(list(index.query_all({"b", "c"})), ["1", "2"])
         self.assertEqual(list(index.query_all({"a", "b", "c"})), ["1"])
+
+class TestStringDistance(unittest.TestCase):
+
+    def test_edit_distance(self):
+        self.assertEqual(edit_distance("a", "a"), 0)
+        self.assertEqual(edit_distance("", "a"), 1)
+        self.assertEqual(edit_distance("a", "b"), 1)
+        self.assertEqual(edit_distance("abc", "cba"), 2)
+        self.assertEqual(edit_distance("abcd", "cbad"), 2)
+        self.assertEqual(edit_distance("abcd", ""), 4)
+    
+    def test_char_set_distance(self):
+        self.assertEqual(char_set_distance("ab", "b"), 1)
+        self.assertEqual(char_set_distance("ab", "ba"), 0)
+        self.assertEqual(char_set_distance("", "b"), np.inf)
+
+    def test_tf_idf_distance(self):
+        pass 
 
 
 

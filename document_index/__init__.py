@@ -1,7 +1,7 @@
+import string
 from typing import Callable, Set
 from typing import List
-import string
-
+import numpy as np 
 class Document:
     def __init__(self, id, terms):
         self.id = id 
@@ -18,8 +18,8 @@ class Document:
 def remove_non_alphanumeric(s: str) -> str:
     return "".join(c for c in s if c.isalnum())
 
-def simple_tokenizer(content: str) -> List[str]:
-    return set([remove_non_alphanumeric(s) for s in content.split(" ") if remove_non_alphanumeric(s) != ""])
+def simple_tokenizer(content: str) -> Set[str]:
+    return [remove_non_alphanumeric(s) for s in content.split(" ") if remove_non_alphanumeric(s) != ""]
 
 
 class PostingsList:
@@ -126,3 +126,9 @@ class Index:
         for p in plists[1:]:
             result = result ^ p
         return result 
+
+def vectorize(doc: str, collection: List[str]):
+    A = string.ascii_letters + string.digits
+    return np.array([np.log(1 + len([c for c in doc if c == x]) / len(doc)*(
+        np.log(len(collection) / len([d for d in collection if x in d])) if any(x in c for c in collection) else 0 
+    )) for x in A])

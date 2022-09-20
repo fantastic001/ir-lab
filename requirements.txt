@@ -1,3 +1,6 @@
 networkx 
-blist 
 matplotlib 
+numpy
+pandas
+tabulate
+scipy
