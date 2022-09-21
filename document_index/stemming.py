@@ -17,7 +17,10 @@ def remove_ending(x):
     return replace_ending(x, "")
 
 def remove_duplicate_at_end():
-    return lambda s: remove_ending(s[-1] * 2)(s)
+    return lambda s: remove_ending(s[-1] * 2)(s) if len(s) > 0 else s
+
+def ignore_word(w):
+    return lambda s: "" if s == w else s
 class StandardStemmer:
     def __init__(self, rules, dataset) -> None:
         self.rules = rules 
@@ -35,7 +38,7 @@ class StandardStemmer:
     def __call__(self, word: str) -> str:
         word = word.lower()
         for rule in self.rules:
-            if rule(word) in self.dataset:
+            if rule(word) in self.dataset + [""]:
                 word = rule(word)
         return word
 
@@ -46,9 +49,15 @@ def english_rules():
         replace_ending("ied", "y"),
         remove_ending("ed"),
         remove_ending("s"),
+        ignore_word("the"),
+        ignore_word("a"),
+        ignore_word("an"),
+        ignore_word("and"),
+        ignore_word("or"),
+        ignore_word("then"),
         chain(remove_ending("ing"), remove_duplicate_at_end())
     ]
 
 
 def stemmed_tokenizer(tokenizer, stemmer):
-    return lambda x: [stemmer(token) for token in tokenizer(x)]
+    return lambda x: [stemmer(token) for token in tokenizer(x) if stemmer(token) != ""]

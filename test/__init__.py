@@ -37,7 +37,8 @@ class TestDocumentIndex(unittest.TestCase):
     def test_stemming(self):
         dictionary = "play join fly we like to with"
         stemmer = StandardStemmer.from_string(dictionary, english_rules())
-        self.assertEqual(stemmed_tokenizer(simple_tokenizer, stemmer)("We like to play with flies"), ["we", "like", "to", "play", "with", "fly"])
+        self.assertEqual(stemmed_tokenizer(standard_tokenizer, stemmer)("We like to play with flies"), ["we", "like", "to", "play", "with", "fly"])
+        self.assertEqual(stemmed_tokenizer(standard_tokenizer, stemmer)("We like then play"), ["we", "like", "play"])
     
     def test_standard_tokenizer(self):
         self.assertEqual(["a", "b", "c"], standard_tokenizer("  a  b   c"))
