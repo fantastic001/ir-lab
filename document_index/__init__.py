@@ -1,3 +1,5 @@
+from distutils.command.config import config
+from gettext import bindtextdomain
 import string
 from typing import Callable, Set
 from typing import List
@@ -129,16 +131,98 @@ class PostingsList:
         return result 
 
 
+
+class BNode:
+    class Config:
+        RANK = 5
+    def __init__(self, children, data, last, parent, rank=Config.RANK) -> None:
+        self.children = children
+        self.data = data 
+        self.last = last 
+        self.parent = parent 
+        self.rank = rank 
+    
+    def add(self, key, data):
+        if len(self.children) < 2*self.rank:
+            self.data[key] = data
+            self.children[key] = None
+            return self 
+        else:
+            self.data[key] = data 
+            self.children[key] = None 
+            keys = list(self.children.keys())
+            mid = keys[len(keys)//2]
+            left = [x for x in keys if x < mid] 
+            right = [x for x in keys if x > mid]
+            right_data = {x: self.data[x] for x in keys if x in right}
+            right_children = {x: self.children[x] for x in keys if x in right}
+            right_last = self.last 
+            self.last = self.children[mid]
+            mid_data = self.data[mid]
+            self.data = {x: self.data[x] for x in left}
+            self.children = {x: self.children[x] for x in left}
+            if self.parent is None:
+                self.parent = BNode({
+                        mid: self
+                    }, {
+                        mid: mid_data
+                    }, 
+                    BNode(right_children, right_data, right_last, None, self.rank),
+                    None, 
+                    self.rank
+                )
+                self.parent.last.parent = self.parent
+                return self.parent
+            else:
+                node = self.parent.add(mid, mid_data)
+                node.children[mid] = self
+                mid_right = [x for x in node.children.keys() if  x > mid] 
+                if len(mid_right) == 0:
+                    node.last = BNode(right_children, right_data, right_last, node, self.rank)
+                else:
+                    node.children[min(mid_right)] = BNode(right_children, right_data, right_last, node, self.rank)
+                return node 
+
+class BTree:
+    def __init__(self) -> None:
+        self.root = BNode(dict(), dict(), None, None, BNode.Config.RANK)
+    def add(self, key, data):
+        curr = self.root 
+        while curr.last is not None:
+            # find minimal key greater than needed 
+            right = [x for x in curr.data.keys() if x > key]
+            if len(right) == 0:
+                curr = curr.last
+            else:
+                curr = curr.children[min(right)]
+        curr.add(key, data)
+        while self.root.parent is not None:
+            self.root = self.root.parent
+    
+    def get(self, key, default):
+        curr = self.root 
+        while key not in curr.data and curr.last is not None:
+            # find minimal key greater than needed 
+            right = [x for x in curr.data.keys() if x > key]
+            if len(right) == 0:
+                curr = curr.last
+            else:
+                curr = curr.children[min(right)]
+        if key not in curr.data:
+            return default 
+        else:
+            return curr.data[key]
 class Index:
     def __init__(self) -> None:
-        self.data = {}
+        self.data = BTree()
     
     def add(self, doc: Document):
         for term in doc.terms:
-            if term not in self.data:
-                self.data[term] = PostingsList.from_list([doc.id])
+            plist = self.data.get(term, None)
+            if plist is None:
+                self.data.add(term, PostingsList.from_list([doc.id]))
             else:
-                self.data[term].add(doc.id)
+                plist.add(doc.id)
     def query_all(self, terms: Set[str]):
         plists = sorted([self.data.get(term, PostingsList()) for term in terms], key = lambda x: len(x))
         result = plists[0]

@@ -26,13 +26,47 @@ class TestDocumentIndex(unittest.TestCase):
         self.assertEqual(list(docs ^ PostingsList.from_list(["d"])), ["d"])
         self.assertEqual(list(docs ^ PostingsList.from_list(["b", "c"])), ["b", "c"])
     
+    def test_b_tree(self):
+        tree = BTree()
+        tree.add(1, "a")
+        self.assertEqual(tree.get(1, None), "a")
+        self.assertEqual(tree.get(2, None), None)
+        tree.add(2, "2")
+        tree.add(3, "3")
+        tree.add(4, "4")
+        tree.add(5, "5")
+        tree.add(6, "6")
+        tree.add(7, "7")
+        tree.add(8, "8")
+        self.assertEqual(tree.get(2, None), "2")
+        self.assertEqual(tree.get(5, None), "5")
+        tree.add(0, "0")
+        self.assertEqual(tree.get(0, None), "0")
+        self.assertEqual(tree.get(500, None), None)
+        tree.add(5.5, "5.5")
+        self.assertEqual(tree.get(5.5, None), "5.5")
+        tree.add(5.6, "5.6")
+        self.assertEqual(tree.get(5.5, None), "5.5")
+        tree.add(5.7, "5.7")
+        self.assertEqual(tree.get(5.7, None), "5.7")
+        tree.add(5.8, "5.8")
+        self.assertEqual(tree.get(5.8, None), "5.8")
+        tree.add(5.9, "5.9")
+        self.assertEqual(tree.get(5.9, None), "5.9")
+
+
+
     def test_index(self):
         index = Index()
         index.add(Document("1", {"a", "b", "c"}))
         index.add(Document("2", {"b", "c", "d"}))
+        index.add(Document("0", {"1", "2", "3"}))
+        index.add(Document("5", {"6", "5", "4"}))
+        index.add(Document("a", {"A", "B", "C"}))
         self.assertEqual(list(index.query_all({"b", "c"})), ["1", "2"])
         self.assertEqual(list(index.query_all({"a", "b", "c"})), ["1"])
         self.assertEqual(list(index.query_all({"a", "b", "cjlkjkljkl"})), [])
+        self.assertEqual(list(index.query_all({"C", "B"})), ["a"])
             
     def test_stemming(self):
         dictionary = "play join fly we like to with"
