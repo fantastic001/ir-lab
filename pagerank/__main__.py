@@ -1,8 +1,8 @@
-
+import sys 
 from pagerank import * 
 
 
-g = generate(5)
+g = generate(int(sys.argv[1]))
 
 
 nx.draw(g)
